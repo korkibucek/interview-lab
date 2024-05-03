@@ -57,14 +57,15 @@ firewall-cmd --reload
 
 # Handle large log file for nginx, ensuring directory and permissions are set
 mkdir -p /var/log/nginx
-fallocate -l 10G /var/log/nginx/large.log
-chown nginx:nginx /var/log/nginx/large.log
-chmod 600 /var/log/nginx/large.log
+fallocate -l 20G /var/log/nginx/access.log
+chown nginx:nginx /var/log/nginx/access.log
+chmod 600 /var/log/nginx/access.log
 
 # Set up a basic HTML file for Nginx (even though Nginx is disabled)
-mkdir -p /var/www/html
-echo "Welcome to the lab!" > /var/www/html/index.html
-chmod 660 /var/www/html/index.html
+rm -rf /usr/share/nginx/html/index.html
+echo "Welcome to the lab!" > /usr/share/nginx/html/index.html
+chown root:root /usr/share/nginx/html/index.html
+chmod 600 /usr/share/nginx/html/index.html
 
 # Break DNS at the end to minimize disruptions
 echo "Breaking DNS..."
