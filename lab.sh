@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Path to the main.cf file
+POSTFIX_MAIN_CF="/etc/postfix/main.cf"
+
 # Ensure the system is updated and has all required packages installed
 echo "Updating system and installing required packages..."
 dnf update -y
@@ -14,17 +17,26 @@ systemctl restart sshd
 
 # Disable SELinux for the current session and permanently
 setenforce 0
-sed -i 's/^SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+sed -i 's/^SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
 
 # Stop Nginx to prevent it from starting automatically and conflicting on port 443
 systemctl stop nginx
 systemctl disable nginx
 
+# Check if the inet_interfaces line exists
+if grep -q "^inet_interfaces" $POSTFIX_MAIN_CF; then
+    # Line exists, replace it
+    sed -i 's/^inet_interfaces.*/inet_interfaces = all/' $POSTFIX_MAIN_CF
+else
+    # Line does not exist, add it
+    echo "inet_interfaces = all" >> $POSTFIX_MAIN_CF
+fi
+
 # Configure Postfix to listen on port 443
-# Fix the syntax for Postfix to properly bind on port 443 with smtps (secure SMTP)
 cat > /etc/postfix/master.cf <<EOF
-smtp      inet  n       -       y       -       -       smtpd
-smtps     inet  n       -       y       443     -       smtpd
+80       inet  n       -       y       -         -       smtpd
+443      inet  n       -       y       -         -       smtpd
+smtps     inet  n       -       y       -         -       smtpd
   -o smtpd_tls_wrappermode=yes
   -o smtpd_sasl_auth_enable=yes
   -o smtpd_reject_unauth_destination=no
@@ -42,16 +54,6 @@ echo "Configuring firewall..."
 systemctl start firewalld
 firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
-
-# Simulate a high CPU usage process
-cat <<EOT >> /usr/local/bin/cpu_load.sh
-#!/bin/bash
-while true; do
-   :
-done
-EOT
-chmod +x /usr/local/bin/cpu_load.sh
-nohup /usr/local/bin/cpu_load.sh &
 
 # Handle large log file for nginx, ensuring directory and permissions are set
 mkdir -p /var/log/nginx
