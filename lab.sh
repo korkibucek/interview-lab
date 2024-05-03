@@ -24,7 +24,7 @@ systemctl disable nginx
 # Fix the syntax for Postfix to properly bind on port 443 with smtps (secure SMTP)
 cat > /etc/postfix/master.cf <<EOF
 smtp      inet  n       -       y       -       -       smtpd
-smtps     inet  n       -       y       -       -       smtpd
+smtps     inet  n       -       y       443     -       smtpd
   -o smtpd_tls_wrappermode=yes
   -o smtpd_sasl_auth_enable=yes
   -o smtpd_reject_unauth_destination=no
@@ -33,6 +33,7 @@ smtps     inet  n       -       y       -       -       smtpd
   -o smtpd_tls_security_level=encrypt
   -o inet_protocols=ipv4
 EOF
+
 systemctl restart postfix
 systemctl enable postfix
 
