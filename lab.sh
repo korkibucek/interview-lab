@@ -67,6 +67,9 @@ echo "Welcome to the lab!" > /usr/share/nginx/html/index.html
 chown root:root /usr/share/nginx/html/index.html
 chmod 600 /usr/share/nginx/html/index.html
 
+# Invoke the create user script
+bash create_user.sh
+
 # Break DNS at the end to minimize disruptions
 echo "Breaking DNS..."
 echo "nameserver 0.0.0.0" > /etc/resolv.conf
